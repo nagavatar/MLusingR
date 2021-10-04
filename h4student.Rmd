@@ -1,0 +1,119 @@
+---
+title: "Assignment 4 ST464/ST684"
+author: "Madhusudan Panwar"
+
+---
+
+
+```{r, eval=T, echo=FALSE}
+suppressMessages(library(MASS))
+suppressMessages(library(gam))
+
+```
+
+
+
+#### Question 2
+
+
+
+
+
+(a)
+```{r}
+library('ggplot2')
+f1 <- lm(nox ~ bs(dis, df=4), data= Boston)
+
+#knots used
+attr(bs(Boston$dis, df=4), "knots")
+
+ggplot(data=Boston, aes(x=dis, y=nox))+ geom_point() +
+geom_line(aes(y=fitted(f1)), color="red")
+#the fit looks quite good but seem to lost a bit towards the END
+
+summary(f1)
+mean(residuals(f1)^2)
+
+```
+
+
+(b)
+```{r}
+
+fit_spline <- smooth.spline(Boston$dis, Boston$nox, cv=T )
+ggplot(data=Boston, aes(x=dis, y=nox))+ geom_point() + geom_line(aes(y=fitted(fit_spline)), color="red" )
+
+fit_spline
+mean(residuals(fit_spline)^2)
+
+#The resulting fit overfits the data as it has too many knots
+#Automatic LAMBDA gives better fit but it overfits the data
+```
+
+
+
+
+(c)
+```{r}
+f3 <- smooth.spline(Boston$dis,Boston$nox,   spar=1)
+f3
+mean(residuals(f3)^2)
+ggplot(data=Boston, aes(x=dis, y=nox))+ geom_point() + geom_line(aes(y=fitted(fit_spline)), color="red" ) + geom_line(aes(y=fitted(f3)), color="blue" )
+
+#The smoothing spline with spar = 1 is the better one as compared to previous one(red).
+```
+
+
+
+
+
+
+#### Question 3
+
+
+
+
+
+(a)
+```{r}
+set.seed(1)
+s <- sample(nrow(Boston), round(.6*nrow(Boston)))
+Boston1 <- Boston[s,]
+Boston2 <- Boston[-s,]
+
+
+model <- gam(nox ~ ns(dis,4)+ns(age,4)+ns(black,4), data=Boston1)
+
+#Training set error
+mean(residuals(model)^2)
+#Testing set error
+mean((Boston2$nox-(predict(model,Boston2)))^2)
+```
+
+
+(b)
+```{r}
+plot.Gam(model)
+#plot.Gam(model, terms="ns(age, 4)")
+#plot.Gam(model, terms="ns(medv, 4)")
+
+#We can put linear term for age predictor
+```
+
+
+
+
+(c)
+```{r}
+
+simplified_model <- lm(nox ~ ns(dis,2)+ns(age,2)+ns(black,2), data=Boston1)
+anova(simplified_model,model)
+
+# So that means simplified model is better than original model. So we'll say simplified model is better
+```
+
+
+
+
+
+
